@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferdawss Quest – The Secret Admirer Case</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --ink:       #1a0a0a;
+  --paper:     #f5ede0;
+  --cream:     #ece0cc;
+  --rose:      #c4566a;
+  --rose-dark: #8b2a3a;
+  --rose-glow: #e87a90;
+  --amber:     #d4853a;
+  --night:     #0d0a1a;
+  --night2:    #1a1230;
+  --pixel:     #6affe6;
+  --gold:      #f0c060;
+  --red-crit:  #ff3344;
+  --blue-mp:   #4488ff;
+  --hp-safe:   #e87a90;
+  --hp-warn:   #d4a020;
+  --hp-crit:   #cc2233;
+  --shadow:    rgba(0,0,0,0.7);
+  --radius:    6px;
+  --font-display: 'Special Elite', serif;
+  --font-body:    'Crimson Pro', serif;
+  --font-pixel:   'VT323', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--night); }
+
+body {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--paper);
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCENE SYSTEM
+═══════════════════════════════════════════════════════════════ */
+.scene {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.scene.active { display: flex; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FADE OVERLAY
+═══════════════════════════════════════════════════════════════ */
+#fadeOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+#fadeOverlay.fade-in  { opacity: 1; pointer-events: all; }
+#fadeOverlay.fade-out { opacity: 0; pointer-events: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 1px;
+  padding: 10px 22px;
+  border: 2px solid var(--rose);
+  background: transparent;
+  color: var(--rose-glow);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.btn:hover {
+  background: var(--rose);
+  color: #fff;
+  box-shadow: 0 0 14px var(--rose-glow);
+}
+.btn.gold {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.btn.gold:hover {
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 0 14px var(--gold);
+}
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TITLE SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-title {
+  background: radial-gradient(ellipse at center, #1e0a2e 0%, #0a0010 70%);
+  overflow: hidden;
+}
+#title-stars {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%,100% { opacity: 0.15; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.4); }
+}
+#title-content {
+  position: relative; z-index: 2;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+#title-hero-img {
+  width: 160px; height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px var(--rose-glow));
+  animation: heroFloat 3s ease-in-out infinite;
+}
+@keyframes heroFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+#title-logo {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 4vw, 38px);
+  color: var(--rose-glow);
+  text-shadow: 0 0 30px var(--rose), 0 0 60px var(--rose-dark);
+  line-height: 1.2;
+}
+#title-sub {
+  font-family: var(--font-pixel);
+  font-size: 22px;
+  color: var(--pixel);
+  letter-spacing: 2px;
+  animation: blink 1.2s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   NARRATIVE SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-narrative {
+  background: #000;
+  padding: 40px;
+  text-align: center;
+}
+#narrative-box {
+  max-width: 600px;
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2.5vw, 22px);
+  line-height: 1.9;
+  color: var(--paper);
+  min-height: 120px;
+}
+#narrative-continue {
+  margin-top: 30px;
+  font-family: var(--font-pixel);
+  font-size: 20px;
+  color: var(--pixel);
+  animation: blink 1s step-end infinite;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BATTLE SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-battle {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+#battle-bg {
+  position: absolute; inset: 0;
+  object-fit: cover; width: 100%; height: 100%;
+  filter: brightness(0.45);
+}
+#battle-ui {
+  position: relative; z-index: 2;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  padding: 12px 16px;
+  gap: 0;
+  justify-content: space-between;
+}
+
+/* stat bars */
+#battle-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.stat-panel {
+  background: rgba(0,0,0,0.75);
+  border: 1.5px solid var(--rose-dark);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  min-width: 200px;
+  flex: 1;
+}
+.stat-panel .name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--gold);
+  margin-bottom: 5px;
+}
+.bar-wrap { margin-bottom: 4px; }
+.bar-label {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  display: flex; justify-content: space-between;
+  margin-bottom: 2px;
+}
+.bar-track {
+  height: 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.bar-fill.hp { background: var(--hp-safe); }
+.bar-fill.hp.warn { background: var(--hp-warn); }
+.bar-fill.hp.crit { background: var(--hp-crit); }
+.bar-fill.mp { background: var(--blue-mp); }
+
+/* sprites area */
+#battle-arena {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 80px 20px;
+}
+.sprite-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px;
+}
+.sprite-wrap img {
+  max-height: clamp(160px, 35vh, 380px);
+  max-width: 260px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8));
+  transition: transform 0.08s;
+}
+.sprite-wrap img.shake { animation: spriteShake 0.35s ease; }
+.sprite-wrap img.enemy-dead { filter: grayscale(1) opacity(0.3); }
+@keyframes spriteShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(6px); }
+}
+.float-text {
+  position: absolute;
+  font-family: var(--font-pixel);
+  font-size: 28px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: floatUp 1.2s ease forwards;
+  z-index: 10;
+}
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+/* dialogue box */
+#battle-dialogue {
+  background: rgba(0,0,0,0.88);
+  border: 2px solid var(--rose-dark);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  min-height: 54px;
+  font-family: var(--font-pixel);
+  font-size: 35px;
+  color: var(--paper);
+  position: relative;
+  cursor: pointer;
+}
+#battle-log {
+  background: rgba(0,0,0,0.7);
+  border: 1.5px solid var(--rose-dark);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  height: 200px;
+  max-height: 200px;
+  flex: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+}
+#battle-log::-webkit-scrollbar { width: 4px; }
+#battle-log::-webkit-scrollbar-track { background: transparent; }
+#battle-log::-webkit-scrollbar-thumb { background: var(--rose-dark); border-radius: 2px; }
+.log-entry {
+  font-family: var(--font-pixel);
+  font-size: 26px;
+  line-height: 1.4;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.log-entry.player { color: var(--rose-glow); }
+.log-entry.enemy  { color: #ff9999; }
+.log-entry.system { color: var(--gold); }
+.log-entry.heal   { color: #6aff8a; }
+#battle-dialogue .speaker {
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 2px;
+  font-family: var(--font-display);
+}
+#dialogue-arrow {
+  display: inline-block;
+  color: var(--pixel);
+  animation: blink 0.8s step-end infinite;
+  margin-left: 6px;
+}
+
+/* command menus */
+#battle-commands {
+  display: flex; flex-direction: column; gap: 6px;
+}
+#cmd-main {
+  display: flex; gap: 8px; justify-content: center;
+}
+#cmd-sub {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+  min-height: 44px;
+}
+.cmd-btn {
+  font-family: var(--font-pixel);
+  font-size: 19px;
+  padding: 8px 18px;
+  background: rgba(0,0,0,0.8);
+  border: 1.5px solid var(--rose-dark);
+  color: var(--paper);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 100px;
+}
+.cmd-btn:hover:not(:disabled) {
+  background: var(--rose-dark);
+  border-color: var(--rose-glow);
+}
+.cmd-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.cmd-btn.special-gold { border-color: var(--gold); color: var(--gold); }
+.cmd-btn.special-gold:hover:not(:disabled) { background: var(--gold); color: var(--ink); }
+.cmd-btn.back-btn { border-color: #555; color: #aaa; }
+
+/* ═══════════════════════════════════════════════════════════════
+   INVESTIGATION SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-investigate {
+  background: radial-gradient(ellipse at 30% 40%, #2a1a10 0%, #12100e 100%);
+  overflow-y: auto;
+  padding: 20px;
+  align-items: stretch;
+}
+#invest-container {
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#invest-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 3vw, 28px);
+  color: var(--gold);
+  text-align: center;
+  text-shadow: 0 0 20px rgba(240,192,96,0.5);
+  border-bottom: 1px solid var(--rose-dark);
+  padding-bottom: 10px;
+}
+#invest-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* handwriting compare */
+.letter-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.letter-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 760px;
+}
+.letter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.letter-panel-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--amber);
+  letter-spacing: 1px;
+  text-align: center;
+}
+.letter-panel img {
+  width: 100%;
+  border: 2px solid var(--rose-dark);
+  border-radius: var(--radius);
+  background: #f5ede0;
+  max-height: 280px;
+}
+.letter-panel img.active-letter {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(240,192,96,0.4);
+}
+.suspect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.suspect-card {
+  background: rgba(0,0,0,0.6);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  padding-bottom: 8px;
+}
+.suspect-card:hover { 
+  border-color: var(--rose-glow); 
+  box-shadow: 0 0 10px var(--rose); 
+}
+.suspect-card.selected { 
+  border-color: var(--gold); 
+  box-shadow: 0 0 12px var(--gold); 
+}
+.suspect-card img { 
+  width: 100%; 
+  object-fit: cover; 
+  object-position: top; 
+}
+.suspect-card .sname {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--gold);
+  margin-top: 4px;
+}
+
+/* chips examination */
+.chips-examine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.chips-examine img {
+  max-width: 200px;
+  border: 2px solid var(--rose-dark);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
+}
+.chips-examine img:hover { filter: brightness(1.2); transform: scale(1.03); }
+.clue-box {
+  background: rgba(0,0,0,0.6);
+  border: 1.5px solid var(--rose-dark);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  max-width: 500px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--cream);
+}
+.clue-box .clue-title {
+  font-family: var(--font-display);
+  color: var(--gold);
+  margin-bottom: 6px;
+  font-size: 18px;
+}
+
+/* interrogation */
+.interrogation-flow {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.suspect-interrogate {
+  background: rgba(0,0,0,0.55);
+  border: 1.5px solid var(--rose-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.suspect-interrogate.locked { opacity: 0.4; pointer-events: none; }
+.suspect-interrogate.unlocked { border-color: var(--rose-glow); }
+.suspect-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: rgba(0,0,0,0.3);
+}
+.suspect-header img {
+  width: 60px; height: 60px;
+  object-fit: cover; border-radius: 50%;
+  border: 2px solid var(--rose-dark);
+}
+.suspect-header .sname {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--gold);
+}
+.suspect-header .sstatus {
+  font-size: 13px;
+  color: var(--cream);
+  opacity: 0.7;
+  margin-left: auto;
+}
+.suspect-dialogue {
+  padding: 0 14px;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s;
+}
+.suspect-dialogue.open {
+  max-height: 500px;
+  padding: 10px 14px;
+}
+.dialogue-line {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--cream);
+  line-height: 1.6;
+  margin-bottom: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--rose-dark);
+}
+.dialogue-line.key { border-color: var(--gold); color: var(--gold); }
+
+.press-btn {
+  margin: 6px 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+}
+.press-btn:hover { background: var(--amber); color: var(--ink); }
+
+/* invest proceed */
+#invest-proceed {
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME OVER SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-gameover {
+  background: radial-gradient(ellipse at center, #1a0505 0%, #000 80%);
+}
+#gameover-img {
+  width: 140px; height: 140px;
+  object-fit: contain;
+  filter: grayscale(1) brightness(0.5);
+  animation: flicker 2s ease-in-out infinite;
+}
+@keyframes flicker {
+  0%,100% { opacity: 0.5; } 50% { opacity: 0.8; }
+}
+#gameover-text {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--red-crit);
+  text-shadow: 0 0 20px var(--red-crit);
+  margin: 16px 0 8px;
+}
+#gameover-sub {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--cream);
+  margin-bottom: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VICTORY SCENE
+═══════════════════════════════════════════════════════════════ */
+#scene-victory {
+  background: radial-gradient(ellipse at center, #0a2a10 0%, #000 80%);
+  text-align: center;
+}
+#victory-img {
+  width: 150px; height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px #6aff8a);
+  animation: victoryPulse 1.5s ease-in-out infinite;
+}
+@keyframes victoryPulse {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+#victory-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 40px);
+  color: #6aff8a;
+  text-shadow: 0 0 30px #4adb6a;
+  margin: 14px 0 8px;
+}
+#victory-msg {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--cream);
+  max-width: 500px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+/* USB modal */
+#usb-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.88);
+  align-items: center; justify-content: center;
+}
+#usb-modal.open { display: flex; }
+#usb-box {
+  background: var(--night2);
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 30px 40px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 0 40px rgba(240,192,96,0.3);
+}
+#usb-box .usb-icon { font-size: 56px; margin-bottom: 10px; }
+#usb-box h3 {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+#usb-box p {
+  font-family: var(--font-body);
+  color: var(--cream);
+  margin-bottom: 18px;
+  font-size: 16px;
+}
+#usb-box .secret-link {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--pixel);
+  border: 1.5px solid var(--pixel);
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  margin-bottom: 14px;
+  transition: background 0.15s;
+}
+#usb-box .secret-link:hover { background: var(--pixel); color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATION / ITEM DROP POPUP
+═══════════════════════════════════════════════════════════════ */
+#item-popup {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.92);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 10px 24px;
+  font-family: var(--font-pixel);
+  font-size: 20px;
+  color: var(--gold);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#item-popup.show { opacity: 1; }
+
+/* Stamp */
+.stamp {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--rose-dark);
+  border: 2px solid var(--rose-dark);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  transform: rotate(-4deg);
+  opacity: 0.7;
+}
+.clue-stamp {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--amber);
+  border: 1.5px solid var(--amber);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  opacity: 0.85;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════ FADE OVERLAY ════════════ -->
+<div id="fadeOverlay"></div>
+
+<!-- ════════════ ITEM POPUP ════════════ -->
+<div id="item-popup"></div>
+
+<!-- ════════════ USB MODAL ════════════ -->
+<div id="usb-modal">
+  <div id="usb-box">
+    <div class="usb-icon">🔑</div>
+    <h3>USB Key Found!</h3>
+    <p>Hidden inside Alien's jacket — a tiny USB key engraved with a small heart.<br>You plug it into the school computer…</p>
+    <a href="#" class="secret-link" id="usb-link">► Open Secret Link ◄</a>
+    <br>
+    <button class="btn gold" onclick="closeUSB()">Close</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 1: TITLE
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-title" class="scene active">
+  <canvas id="title-stars" style="position:absolute;inset:0;pointer-events:none;"></canvas>
+  <div id="title-content">
+    <img id="title-hero-img" src="Fight/Ferdawss.png" alt="Ferdawss" onerror="this.style.fontSize='80px';this.src='';this.alt='🕵️‍♀️'">
+    <div id="title-logo">
+      Ferdawss Quest<br>
+      <span style="font-size:0.65em;color:var(--cream);">— The Secret Admirer Case —</span>
+    </div>
+    <div id="title-sub">— press start —</div>
+    <button class="btn gold" onclick="startGame()" style="margin-top:8px;font-size:18px;padding:12px 34px;">START</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 2: NARRATIVE
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-narrative" class="scene">
+  <div id="narrative-box"></div>
+  <div id="narrative-continue" onclick="narrativeContinue()">[ click to continue ▼ ]</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 3: BATTLE
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-battle" class="scene">
+  <img id="battle-bg" src="" alt="">
+  <div id="battle-ui">
+
+    <!-- stats row -->
+    <div id="battle-stats">
+      <div class="stat-panel" id="panel-player">
+        <div class="name" id="player-name">Ferdawss</div>
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>HP</span>
+            <span id="player-hp-txt">100/100</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill hp" id="player-hp-bar" style="width:100%"></div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>MP</span>
+            <span id="player-mp-txt">60/60</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill mp" id="player-mp-bar" style="width:100%"></div>
+          </div>
+        </div>
+        <div style="font-family:var(--font-pixel);font-size:14px;margin-top:4px;color:var(--gold)" id="inv-display"></div>
+      </div>
+
+      <div class="stat-panel" id="panel-enemy">
+        <div class="name" id="enemy-name">Enemy</div>
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>HP</span>
+            <span id="enemy-hp-txt">100/100</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill hp" id="enemy-hp-bar" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sprites -->
+    <div id="battle-arena">
+      <div class="sprite-wrap" id="sprite-player-wrap">
+        <img id="sprite-player" src="Fight/Ferdawss.png" alt="Ferdawss">
+      </div>
+      <div class="sprite-wrap" id="sprite-enemy-wrap" style="align-items:flex-end">
+        <img id="sprite-enemy" src="" alt="Enemy">
+      </div>
+    </div>
+
+    <!-- dialogue -->
+    <div id="battle-dialogue" onclick="advanceDialogue()">
+      <div class="speaker" id="diag-speaker"></div>
+      <div id="diag-text">…</div>
+      <span id="dialogue-arrow" style="display:none">▼</span>
+    </div>
+
+    <!-- battle log -->
+    <div id="battle-log"></div>
+
+    <!-- commands -->
+    <div id="battle-commands" style="display:none">
+      <div id="cmd-main">
+        <button class="cmd-btn" id="btn-attack" onclick="showSubmenu('attack')">⚔️ Attack</button>
+        <button class="cmd-btn" id="btn-special" onclick="showSubmenu('special')">✨ Special</button>
+        <button class="cmd-btn" id="btn-items" onclick="showSubmenu('items')">🎒 Items</button>
+      </div>
+      <div id="cmd-sub"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 4: INVESTIGATE
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-investigate" class="scene">
+  <div id="invest-container">
+    <div id="invest-title">🔍 Case File — Detective Ferdawss</div>
+    <div id="invest-content"></div>
+    <div id="invest-proceed" style="display:none">
+      <button class="btn gold" id="invest-btn" onclick="investProceed()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 5: GAME OVER
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-gameover" class="scene">
+  <img id="gameover-img" src="Fight/Ferdawss.png" alt="Ferdawss">
+  <div id="gameover-text">GAME OVER</div>
+  <div id="gameover-sub">You've been defeated… but the case isn't closed yet.</div>
+  <button class="btn" onclick="retryBattle()" style="font-size:18px;padding:12px 30px;">Try Again</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCENE 6: VICTORY
+════════════════════════════════════════════════════════════════ -->
+<div id="scene-victory" class="scene">
+  <canvas id="confetti-canvas" style="position:absolute;inset:0;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <img id="victory-img" src="Fight/Ferdawss.png" alt="Ferdawss">
+    <div id="victory-title">✨ Case Closed! ✨</div>
+    <div id="victory-msg">
+      Mystery solved, Detective Ferdawss.<br>
+      The secret admirer has been unmasked.<br>
+      Something was hidden in his jacket…
+    </div>
+    <button class="btn gold" onclick="openUSB()" style="font-size:18px;padding:12px 30px;">🔑 Examine USB Key</button>
+    <button class="btn" onclick="goToTitle()" style="margin-top:6px;">Play Again</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   TITLE STARS
+════════════════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('title-stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = Array.from({length: 120}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      a: Math.random(),
+      speed: Math.random() * 0.008 + 0.003,
+      phase: Math.random() * Math.PI * 2
+    }));
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.a = 0.15 + 0.85 * Math.abs(Math.sin(t * s.speed + s.phase));
+      ctx.globalAlpha = s.a;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  requestAnimationFrame(draw);
+})();
+
+function addLog(text, type = 'system') {
+  const log = document.getElementById('battle-log');
+  if (!log) return;
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  entry.textContent = text;
+  log.prepend(entry);
+}
+
+/* ════════════════════════════════════════════════════════════
+   AUDIO ENGINE (Web Audio API)
+════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+let audioOn = true;
+let bgmNodes = [];
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol=0.15, startDelay=0) {
+  if (!audioOn) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    const t = ctx.currentTime + startDelay;
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t); osc.stop(t + duration);
+  } catch(e) {}
+}
+
+function playSFX(name) {
+  if (!audioOn) return;
+  if (name === 'hit') {
+    [220, 180, 140].forEach((f,i) => playTone(f, 'sawtooth', 0.08, 0.12, i*0.07));
+  } else if (name === 'special') {
+    [300,400,500,700].forEach((f,i) => playTone(f, 'square', 0.12, 0.1, i*0.06));
+  } else if (name === 'heal') {
+    [400,500,600,700].forEach((f,i) => playTone(f, 'sine', 0.2, 0.12, i*0.1));
+  } else if (name === 'victory') {
+    const melody = [523,659,784,1047];
+    melody.forEach((f,i) => playTone(f, 'square', 0.25, 0.15, i*0.15));
+  } else if (name === 'gameover') {
+    [400,300,200,150].forEach((f,i) => playTone(f, 'square', 0.4, 0.15, i*0.2));
+  } else if (name === 'menu') {
+    playTone(880, 'square', 0.06, 0.08);
+  } else if (name === 'encounter') {
+    [200,300,450,600,800].forEach((f,i) => playTone(f, 'sawtooth', 0.1, 0.12, i*0.05));
+  } else if (name === 'miss') {
+    playTone(180, 'square', 0.15, 0.1);
+    playTone(150, 'square', 0.15, 0.1, 0.1);
+  } else if (name === 'clue') {
+    [600,700,900].forEach((f,i) => playTone(f, 'sine', 0.2, 0.12, i*0.1));
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   GAME STATE
+════════════════════════════════════════════════════════════ */
+const MAX_HP = 100, MAX_MP = 60;
+
+const state = {
+  // player stats
+  hp: MAX_HP, mp: MAX_MP,
+  // inventory: key -> count
+  inventory: { tacos: 1, abtal: 1 },
+  // items locked by enemy debuff
+  itemsLocked: false,
+
+  // battle state
+  currentBattle: null, // 'cramps' | 'teacher' | 'alien'
+  enemyHp: 0,
+  enemyMaxHp: 0,
+  playerTurn: true,
+  battlePhase: 'dialogue', // 'dialogue' | 'command' | 'animating'
+
+  // dialogue queue
+  diagQueue: [],
+  diagIdx: 0,
+  diagCallback: null,
+
+  // investigation state
+  investPhase: 0, // 0=letter, 1=chips, 2=interrogation
+  selectedHandwriting: null,
+  letterClueStudied: false,
+  chipsStudied: false,
+  interrogationProgress: 0, // 0=none, 1=pinks, 2=slimenem, 3=ali, 4=alien-unlocked
+  aliPressed: false,
+  alienUnlocked: false,
+
+  // retry data
+  retryHp: MAX_HP, retryMp: MAX_MP,
+
+  // clue items found
+  hasChips: false,
+};
+
+const BATTLES = {
+  cramps: {
+    name: 'Period Cramps 😖',
+    img: 'Fight/Cramps.png',
+    bg:  'Fight/RoomLocation.png',
+    hp:  80, atk: 14,
+    moves: [
+      { name: 'Period Cramps', dmg: 16, msg: "A wave of pain crashes through you!" },
+      { name: 'Throw Up',      dmg: 12, msg: "Nausea hits hard…" },
+      { name: 'Lose Appetite', dmg: 0,  msg: "Your stomach turns — you can't use items next turn!", special: 'lockItems' },
+      { name: 'Stomach Shock', dmg: 20, msg: "A sudden, intense spike of pain!" },
+    ]
+  },
+  teacher: {
+    name: 'Teacher Machkour 📚',
+    img: 'Fight/Teacher.png',
+    bg:  'Fight/ClassLocation.png',
+    hp:  110, atk: 16,
+    moves: [
+      { name: 'Homework',         dmg: 14, msg: "30 pages of homework erode your focus!" },
+      { name: 'Pop Quiz',         dmg: 18, msg: "A sudden pop quiz catches you off guard!" },
+      { name: 'Unsuspected Stare',dmg: 10, msg: "A deep, paralyzing stare freezes you." },
+      { name: 'Separate Friends', dmg: 12, msg: "Isolated seating — emotional damage!" },
+    ]
+  },
+  alien: {
+    name: 'Anxious Alien 👽',
+    img: 'Fight/Ali.png',
+    bg:  'Fight/Streetlocation.png',
+    hp:  150, atk: 18,
+    moves: [
+      { name: 'Overthinking',    dmg: 20, msg: "Anxiety floods the air — you feel confused!" },
+      { name: 'Silent Treatment',dmg: 15, msg: "The silence is deafening…" },
+      { name: '"mhm"',           dmg: 12, msg: '"mhm." — that hurts more than it should.' },
+      { name: 'Cold Stare',      dmg: 22, msg: "A distant, freezing gaze pierces your defenses!" },
+    ]
+  }
+};
+
+const ATTACKS = [
+  { name: 'Heal Stab',          mp: 6,  dmg: [19,25], desc: 'Restorative energy stabbed right in!' },
+  { name: 'Hijab Choke',        mp: 8, dmg: [23,29], desc: 'Precision fabric technique!' },
+  { name: 'Perfume to the Eyes',mp: 10, dmg: [26,32], desc: 'Concentrated perfume — blinding!' },
+];
+const SPECIALS = [
+  { name: 'Mustaja',       mp: 25, dmg: [22,60], desc: 'Legendary localized hairy energy blast!' },
+  { name: 'Baby Spell',   mp: 12, dmg: [28,38], desc: 'Adorably devastating illusion!' },
+  { name: 'Cat Scratches',mp: 14, dmg: [30,40], desc: 'A thousand spectral cats attack!' },
+  { name: 'Forehead Kiss',mp: 0,  dmg: [9999,9999], desc: '💋 One-hit KO — Alien only!', alienOnly: true },
+];
+
+/* ════════════════════════════════════════════════════════════
+   SCENE MANAGEMENT
+════════════════════════════════════════════════════════════ */
+function showScene(id, cb) {
+  const overlay = document.getElementById('fadeOverlay');
+  overlay.classList.add('fade-in');
+  setTimeout(() => {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('scene-' + id);
+    if (target) target.classList.add('active');
+    overlay.classList.remove('fade-in');
+    if (cb) setTimeout(cb, 100);
+  }, 500);
+}
+
+/* ════════════════════════════════════════════════════════════
+   TITLE
+════════════════════════════════════════════════════════════ */
+function startGame() {
+  playSFX('menu');
+  // Reset full state
+  state.hp = MAX_HP; state.mp = MAX_MP;
+  state.inventory = { tacos: 1, abtal: 1 };
+  state.itemsLocked = false;
+  document.getElementById('battle-log').innerHTML = '';
+  state.hasChips = false;
+  state.investPhase = 0;
+  state.letterClueStudied = false;
+  state.chipsStudied = false;
+  state.interrogationProgress = 0;
+  state.aliPressed = false;
+  state.alienUnlocked = false;
+  state.askedQuestions = {};
+  state.aliPressed = false;
+
+  // Narrative: waking up
+  showNarrative([
+    "It was supposed to be a quiet morning.",
+    "Ferdawss woke up in her cozy room, wrapped in warmth…",
+    "…until the cramps hit.",
+    "Something stirred under the door. A letter?",
+    "But first — the pain has to go.",
+  ], () => startBattle('cramps'));
+}
+
+function goToTitle() {
+  playSFX('menu');
+  showScene('title');
+}
+
+/* ════════════════════════════════════════════════════════════
+   NARRATIVE SCENE
+════════════════════════════════════════════════════════════ */
+let narrativeLines = [];
+let narrativeIdx = 0;
+let narrativeCallback = null;
+
+function showNarrative(lines, callback) {
+  narrativeLines = lines;
+  narrativeIdx = 0;
+  narrativeCallback = callback;
+  document.getElementById('narrative-continue').style.display = 'none';
+  showScene('narrative', () => typeNarrativeLine());
+}
+
+function typeNarrativeLine() {
+  const box = document.getElementById('narrative-box');
+  const line = narrativeLines[narrativeIdx];
+  box.innerHTML = '';
+  let i = 0;
+  const interval = setInterval(() => {
+    box.innerHTML += line[i] || '';
+    i++;
+    if (i >= line.length) {
+      clearInterval(interval);
+      document.getElementById('narrative-continue').style.display = 'block';
+    }
+  }, 40);
+}
+
+function narrativeContinue() {
+  playSFX('menu');
+  narrativeIdx++;
+  if (narrativeIdx >= narrativeLines.length) {
+    document.getElementById('narrative-continue').style.display = 'none';
+    if (narrativeCallback) narrativeCallback();
+  } else {
+    document.getElementById('narrative-continue').style.display = 'none';
+    typeNarrativeLine();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   BATTLE SCENE
+════════════════════════════════════════════════════════════ */
+function startBattle(battleKey) {
+  playSFX('encounter');
+  const b = BATTLES[battleKey];
+  state.currentBattle = battleKey;
+  state.enemyHp = b.hp;
+  state.enemyMaxHp = b.hp;
+  state.playerTurn = true;
+  state.itemsLocked = false;
+  state.battlePhase = 'dialogue';
+  state.retryHp = state.hp;
+  state.retryMp = state.mp;
+
+  document.getElementById('battle-bg').src = b.bg;
+  document.getElementById('sprite-enemy').src = b.img;
+  document.getElementById('sprite-enemy').classList.remove('enemy-dead');
+  document.getElementById('enemy-name').textContent = b.name;
+  updateBattleUI();
+  hideCmds();
+
+  showScene('battle', () => {
+    document.getElementById('battle-log').innerHTML = '';
+    queueDialogue([
+      { speaker: '— ENCOUNTER —', text: `${b.name} appears!` },
+      { speaker: 'Ferdawss', text: "I won't back down!" }
+    ], showBattleCmds);
+  });
+}
+
+function retryBattle() {
+  playSFX('menu');
+  // Restore 60% HP, 50% MP
+  state.hp = Math.min(MAX_HP, state.retryHp + Math.floor(MAX_HP * 0.6));
+  state.mp = Math.min(MAX_MP, state.retryMp + Math.floor(MAX_MP * 0.5));
+  startBattle(state.currentBattle);
+}
+
+function updateBattleUI() {
+  const b = BATTLES[state.currentBattle];
+  // player
+  document.getElementById('player-hp-txt').textContent = `${state.hp}/${MAX_HP}`;
+  document.getElementById('player-mp-txt').textContent = `${state.mp}/${MAX_MP}`;
+  const hpPct = state.hp / MAX_HP * 100;
+  const hpBar = document.getElementById('player-hp-bar');
+  hpBar.style.width = hpPct + '%';
+  hpBar.classList.remove('warn','crit');
+  if (hpPct <= 20) hpBar.classList.add('crit');
+  else if (hpPct <= 50) hpBar.classList.add('warn');
+  document.getElementById('player-mp-bar').style.width = (state.mp / MAX_MP * 100) + '%';
+
+  // enemy
+  document.getElementById('enemy-hp-txt').textContent = `${state.enemyHp}/${state.enemyMaxHp}`;
+  const enpPct = state.enemyHp / state.enemyMaxHp * 100;
+  const enBar = document.getElementById('enemy-hp-bar');
+  enBar.style.width = enpPct + '%';
+  enBar.classList.remove('warn','crit');
+  if (enpPct <= 20) enBar.classList.add('crit');
+  else if (enpPct <= 50) enBar.classList.add('warn');
+
+  // inventory display
+  const invParts = [];
+  if (state.inventory.tacos   > 0) invParts.push(`🌮×${state.inventory.tacos}`);
+  if (state.inventory.abtal   > 0) invParts.push(`🥤×${state.inventory.abtal}`);
+  if (state.inventory.painkiller > 0) invParts.push(`💊×${state.inventory.painkiller}`);
+  if (state.inventory.chickenrice > 0) invParts.push(`🍗×${state.inventory.chickenrice}`);
+  if (state.inventory.roblox  > 0) invParts.push(`🎮×${state.inventory.roblox}`);
+  if (state.hasChips && (state.inventory.chips || 0) > 0) invParts.push(`🍟×${state.inventory.chips}`);
+  document.getElementById('inv-display').textContent = invParts.join('  ');
+}
+
+/* -- Dialogue Queue -- */
+function queueDialogue(lines, callback) {
+  state.diagQueue = lines;
+  state.diagIdx = 0;
+  state.diagCallback = callback;
+  state.battlePhase = 'dialogue';
+  hideCmds();
+  showDiagLine();
+}
+
+function showDiagLine() {
+  const line = state.diagQueue[state.diagIdx];
+  document.getElementById('diag-speaker').textContent = line.speaker || '';
+  document.getElementById('diag-text').textContent = line.text;
+  const arrow = document.getElementById('dialogue-arrow');
+  arrow.style.display = (state.diagIdx < state.diagQueue.length - 1) ? 'inline' : 'none';
+}
+
+function advanceDialogue() {
+  if (state.battlePhase !== 'dialogue') return;
+  playSFX('menu');
+  state.diagIdx++;
+  if (state.diagIdx < state.diagQueue.length) {
+    showDiagLine();
+  } else {
+    document.getElementById('dialogue-arrow').style.display = 'none';
+    if (state.diagCallback) {
+      const cb = state.diagCallback;
+      state.diagCallback = null;
+      cb();
+    }
+  }
+}
+
+function showBattleCmds() {
+  state.battlePhase = 'command';
+  document.getElementById('battle-commands').style.display = 'flex';
+  document.getElementById('cmd-sub').innerHTML = '';
+  document.getElementById('diag-speaker').textContent = '';
+  document.getElementById('diag-text').textContent = 'What will you do?';
+  document.getElementById('dialogue-arrow').style.display = 'none';
+}
+
+function hideCmds() {
+  document.getElementById('battle-commands').style.display = 'none';
+}
+
+function showSubmenu(type) {
+  playSFX('menu');
+  const sub = document.getElementById('cmd-sub');
+  sub.innerHTML = '';
+  const back = document.createElement('button');
+  back.className = 'cmd-btn back-btn';
+  back.textContent = '← Back';
+  back.onclick = showBattleCmds;
+  sub.appendChild(back);
+
+  if (type === 'attack') {
+    ATTACKS.forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'cmd-btn';
+      btn.textContent = `${a.name} (${a.mp}MP)`;
+      btn.disabled = state.mp < a.mp;
+      btn.onclick = () => playerAttack(a);
+      sub.appendChild(btn);
+    });
+  } else if (type === 'special') {
+    SPECIALS.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'cmd-btn special-gold';
+      btn.textContent = `${s.name} (${s.mp}MP)`;
+      const isAlienOnly = s.alienOnly && state.currentBattle !== 'alien';
+      btn.disabled = state.mp < s.mp || isAlienOnly;
+      if (isAlienOnly) btn.title = 'Only usable against Alien!';
+      btn.onclick = () => playerSpecial(s);
+      sub.appendChild(btn);
+    });
+  } else if (type === 'items') {
+    if (state.itemsLocked) {
+      const p = document.createElement('p');
+      p.style.color = '#f88'; p.style.fontFamily = 'var(--font-pixel)'; p.style.padding = '6px';
+      p.textContent = '❌ Items locked this turn!';
+      sub.appendChild(p);
+      state.itemsLocked = false;
+      return;
+    }
+    const itemDefs = [
+      { key: 'tacos',      label: '🌮 Tacos',       healHp: 25, healMp: 0  },
+      { key: 'abtal',      label: '🥤 Abtal',        healHp: 0,  healMp: 30 },
+      { key: 'painkiller', label: '💊 Painkillers',  healHp: 40, healMp: 30 },
+      { key: 'chickenrice',label: '🍗 Chicken & Rice',healHp: 60, healMp: 0  },
+      { key: 'roblox',     label: '🎮 Roblox Break', healHp: 0,  healMp: 50 },
+      { key: 'chips',      label: '🍟 La Dinde Chips',healHp: 20, healMp: 0  },
+    ];
+    let hadItem = false;
+    itemDefs.forEach(it => {
+      const qty = state.inventory[it.key] || 0;
+      if (qty <= 0) return;
+      hadItem = true;
+      const btn = document.createElement('button');
+      btn.className = 'cmd-btn';
+      btn.textContent = `${it.label} ×${qty}`;
+      btn.onclick = () => useItem(it);
+      sub.appendChild(btn);
+    });
+    if (!hadItem) {
+      const p = document.createElement('p');
+      p.style.color = '#f88'; p.style.fontFamily = 'var(--font-pixel)'; p.style.padding = '6px';
+      p.textContent = 'No items!';
+      sub.appendChild(p);
+    }
+  }
+}
+
+/* -- Player Actions -- */
+function playerAttack(a) {
+  if (state.mp < a.mp) return;
+  state.mp -= a.mp;
+  const dmg = rand(a.dmg[0], a.dmg[1]);
+  playSFX('hit');
+  shakeSprite('enemy');
+  spawnFloat(dmg, 'var(--rose-glow)', 'enemy');
+  state.enemyHp = Math.max(0, state.enemyHp - dmg);
+  addLog(`Ferdawss → ${a.name}: ${dmg} dmg`, 'player');
+  updateBattleUI();
+  hideCmds();
+  queueDialogue([
+    { speaker: 'Ferdawss', text: `${a.name}! — ${dmg} damage!` }
+  ], checkEnemyDead);
+}
+
+function playerSpecial(s) {
+  if (state.mp < s.mp) return;
+  state.mp -= s.mp;
+  const dmg = rand(s.dmg[0], s.dmg[1]);
+  playSFX('special');
+  shakeSprite('enemy');
+  spawnFloat(s.alienOnly ? '💋 9999!' : dmg, 'var(--gold)', 'enemy');
+  state.enemyHp = Math.max(0, state.enemyHp - dmg);
+  addLog(s.alienOnly ? `Ferdawss → Forehead Kiss: INSTANT KO 💋` : `Ferdawss → ${s.name}: ${dmg} dmg`, 'player');
+  updateBattleUI();
+  hideCmds();
+  let msg = s.alienOnly
+    ? "Ferdawss plants a gentle kiss on his forehead… The anxiety melts away instantly. 💞"
+    : `${s.name}! — ${dmg} damage!`;
+  queueDialogue([
+    { speaker: 'Ferdawss', text: msg }
+  ], checkEnemyDead);
+}
+
+function useItem(it) {
+  state.inventory[it.key]--;
+  state.hp = Math.min(MAX_HP, state.hp + it.healHp);
+  state.mp = Math.min(MAX_MP, state.mp + it.healMp);
+  addLog(`Ferdawss used ${it.label} (+${it.healHp}HP ${it.healMp>0?'/ +'+it.healMp+'MP':''})`, 'heal');
+  playSFX('heal');
+  spawnFloat(`+${it.healHp}HP`, '#6aff8a', 'player');
+  if (it.healMp > 0) spawnFloat(`+${it.healMp}MP`, 'var(--blue-mp)', 'player');
+  updateBattleUI();
+  hideCmds();
+  queueDialogue([
+    { speaker: 'Ferdawss', text: `Used ${it.label}! Feeling better.` }
+  ], enemyTurn);
+}
+
+function checkEnemyDead() {
+  if (state.enemyHp <= 0) {
+    playSFX('victory');
+    document.getElementById('sprite-enemy').classList.add('enemy-dead');
+    onEnemyDefeated();
+  } else {
+    enemyTurn();
+  }
+}
+
+/* -- Enemy Turn -- */
+function enemyTurn() {
+  if (state.battlePhase === 'animating') return;
+  const b = BATTLES[state.currentBattle];
+  const move = b.moves[Math.floor(Math.random() * b.moves.length)];
+  const dmg = move.dmg + rand(-2, 3);
+  state.battlePhase = 'animating';
+  setTimeout(() => {
+    if (move.special === 'lockItems') {
+      state.itemsLocked = true;
+      queueDialogue([
+        { speaker: b.name, text: move.msg },
+        { speaker: '— STATUS —', text: "Your stomach turns… items locked next turn!" }
+      ], showBattleCmds);
+      addLog(`${BATTLES[state.currentBattle].name} → ${move.name}: items locked!`, 'enemy');
+    } else {
+      playSFX('hit');
+      shakeSprite('player');
+      spawnFloat(dmg, 'var(--red-crit)', 'player');
+      state.hp = Math.max(0, state.hp - dmg);
+      addLog(`${BATTLES[state.currentBattle].name} → ${move.name}: ${dmg} dmg`, 'enemy');
+      updateBattleUI();
+      queueDialogue([
+        { speaker: b.name, text: `${move.name}! — ${dmg} damage!` }
+      ], checkPlayerDead);
+    }
+  }, 600);
+}
+
+function checkPlayerDead() {
+  if (state.hp <= 0) {
+    playSFX('gameover');
+    showScene('gameover');
+  } else {
+    showBattleCmds();
+  }
+}
+
+/* -- Enemy Defeated -- */
+function onEnemyDefeated() {
+  const bk = state.currentBattle;
+  if (bk === 'cramps') {
+    queueDialogue([
+      { speaker: 'Ferdawss', text: "The pain fades… Finally!" },
+      { speaker: '— DROP —', text: "The cramps fade, and something falls out... A LETTER!" },
+      { speaker: 'Ferdawss', text: "Someone slipped this under my door… Who wrote this?" }
+    ], () => {
+      showItemPopup('📜 Letter Clue found!');
+      setTimeout(() => {
+        showNarrative([
+          "Ferdawss examined the letter carefully.",
+          "Handwritten. Personal. But who sent it?",
+          "She needs to study it properly.",
+        ], () => {
+          state.investPhase = 0;
+          buildInvestigateScene();
+          showScene('investigate');
+        });
+      }, 1500);
+    });
+  } else if (bk === 'teacher') {
+    // determine drop: if missing HP >= missing MP → chicken rice, else roblox
+    const missingHp = MAX_HP - state.hp;
+    const missingMp = MAX_MP - state.mp;
+    const extra = missingHp >= missingMp ? 'chickenrice' : 'roblox';
+    state.inventory.painkiller = (state.inventory.painkiller || 0) + 1;
+    state.inventory[extra] = (state.inventory[extra] || 0) + 1;
+    state.hasChips = true;
+    state.inventory.chips = (state.inventory.chips || 0) + 1;
+
+    const extraLabel = extra === 'chickenrice' ? 'Chicken & Rice 🍗' : 'Roblox Break 🎮';
+    queueDialogue([
+      { speaker: 'Teacher Machkour', text: "…Dismissed." },
+      { speaker: '— DROP —', text: "Something falls from his desk: a bag of chips. La Dinde flavor." },
+      { speaker: 'Ferdawss', text: "Wait — La Dinde chips? That's oddly specific. Could this be a clue?" }
+    ], () => {
+      showItemPopup(`💊 Painkillers! + ${extraLabel} + 🍟 Chips (Clue)!`);
+      setTimeout(() => {
+        showNarrative([
+          "Armed with snacks and paracetamol, Ferdawss stepped out.",
+          "The chips bag felt important. Someone specific brought these.",
+          "She needed to check it as evidence… then find the suspects.",
+        ], () => {
+          state.investPhase = 1;
+          buildInvestigateScene();
+          showScene('investigate');
+        });
+      }, 1800);
+    });
+  } else if (bk === 'alien') {
+    queueDialogue([
+      { speaker: 'Alien 👽', text: "…You figured it out." },
+      { speaker: 'Alien 👽', text: "I just missed hearing you repeatedly say La dinde to me or asking you what you were eating and you'd say chips with no hesitation..." },
+      { speaker: 'Alien 👽', text: "I adore your smile, your voice, everything about you. I'm sorry I was so anxious I coulnd't tell you to your face" },
+      { speaker: 'Ferdawss', text: "…You left a USB key." },
+    ], () => {
+      playSFX('victory');
+      setTimeout(() => {
+        launchConfetti();
+        showScene('victory');
+      }, 400);
+    });
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   INVESTIGATION SCENE
+════════════════════════════════════════════════════════════ */
+function buildInvestigateScene() {
+  const content = document.getElementById('invest-content');
+  content.innerHTML = '';
+  const proceed = document.getElementById('invest-proceed');
+  proceed.style.display = 'none';
+
+  if (state.investPhase === 0) {
+    // Clue 1: Letter comparison
+    document.getElementById('invest-title').textContent = '🔍 Clue I — Handwriting Analysis';
+    content.innerHTML = `
+      <div style="text-align:center">
+        <span class="stamp">EXHIBIT A</span>
+        <p style="font-family:var(--font-body);color:var(--cream);margin:8px 0;font-size:15px">
+          Click a suspect card to compare their handwriting to the anonymous letter.
+        </p>
+      </div>
+      <div class="letter-compare" style="align-items:center">
+        <div class="letter-compare-grid">
+          <div class="letter-panel">
+            <div class="letter-panel-label">📜 ANONYMOUS LETTER</div>
+            <img src="Investigate/LetterClue.jpeg" alt="The anonymous letter">
+          </div>
+          <div class="letter-panel" id="suspect-letter-panel">
+            <div class="letter-panel-label" id="suspect-letter-label">← Select a suspect</div>
+            <img id="suspect-letter-img" src="" alt="" style="display:none">
+            <div id="suspect-letter-placeholder" style="
+              border: 2px dashed var(--rose-dark);
+              border-radius: var(--radius);
+              height: 280px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              color: var(--rose-dark);
+              font-family: var(--font-display);
+              font-size: 14px;
+            ">No sample selected</div>
+          </div>
+        </div>
+        <p style="font-family:var(--font-display);color:var(--amber);font-size:14px;margin-top:4px">Select a suspect's handwriting:</p>
+        <div class="suspect-grid">
+          ${[
+            {key:'alien', name:'👽 Alien',    img:'Investigate/AlienCaracter.png',   letter:'Investigate/AlienLetter.jpeg'},
+            {key:'ali',   name:'👤 Ali',      img:'Investigate/AliCaracter.png',     letter:'Investigate/AliLetter.jpeg'},
+            {key:'slime', name:'🎤 Slimenem', img:'Investigate/SlimenemCaracter.png',letter:'Investigate/SlimenemLetter.jpeg'},
+            {key:'pinks', name:'🐑 PinkS',    img:'Investigate/PinkSCaracter.png',   letter:'Investigate/PinkSLetter.jpeg'},
+          ].map(s => `
+            <div class="suspect-card" id="sc-${s.key}" onclick="selectHandwriting('${s.key}','${s.letter}')">
+              <img src="${s.img}" alt="${s.name}">
+              <div class="sname">${s.name}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    // show proceed once they've clicked one
+    state.letterClueStudied = false;
+    document.getElementById('invest-proceed').style.display = 'none';
+    document.getElementById('invest-btn').textContent = 'Proceed to School →';
+
+  } else if (state.investPhase === 1) {
+    // Clue 2: Chips examination
+    document.getElementById('invest-title').textContent = '🔍 Clue II — The Mysterious Snack';
+    content.innerHTML = `
+      <div class="chips-examine">
+        <span class="clue-stamp">EXHIBIT B — EVIDENCE</span>
+        <img src="Investigate/chipsLaDinde.png" alt="La Dinde Chips" onclick="examineChips()" id="chips-img"
+          title="Click to examine">
+        <p style="font-family:var(--font-display);color:var(--amber);font-size:14px;cursor:pointer" onclick="examineChips()">
+          ↑ Click the chips bag to examine it
+        </p>
+        <div id="chips-clue-box" style="display:none">
+          <div class="clue-box">
+            <div class="clue-title">🍟 Nebula Chips — La Dinde Flavor</div>
+            <p>
+              This is not a common snack. <em>Turkey-flavored</em> chips — specifically the "Nebula" brand —
+              are an obscure specialty item. Whoever left these had a very particular taste.<br><br>
+              Ferdawss recalls the suspects. She should ask them about this.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+    state.chipsStudied = false;
+    document.getElementById('invest-proceed').style.display = 'none';
+    document.getElementById('invest-btn').textContent = 'Go investigate suspects →';
+
+  } else if (state.investPhase === 2) {
+    // Clue 3: Interrogations
+    document.getElementById('invest-title').textContent = '🔍 Clue III — Interrogations';
+    buildInterrogation(content);
+  }
+}
+
+function selectHandwriting(key, letterSrc) {
+  playSFX('clue');
+  document.querySelectorAll('.suspect-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('sc-' + key).classList.add('selected');
+
+  const img = document.getElementById('suspect-letter-img');
+  const placeholder = document.getElementById('suspect-letter-placeholder');
+  const label = document.getElementById('suspect-letter-label');
+
+  const names = { alien:'👽 Alien', ali:'👤 Ali', slime:'🎤 Slimenem', pinks:'🐑 PinkS' };
+  label.textContent = names[key] + "'s Handwriting";
+  img.src = letterSrc;
+  img.classList.add('active-letter');
+  img.style.display = 'block';
+  placeholder.style.display = 'none';
+
+  state.letterClueStudied = true;
+  document.getElementById('invest-proceed').style.display = 'block';
+}
+
+function examineChips() {
+  if (state.chipsStudied) return;
+  playSFX('clue');
+  state.chipsStudied = true;
+  document.getElementById('chips-clue-box').style.display = 'block';
+  document.getElementById('chips-img').style.filter = 'drop-shadow(0 0 12px var(--gold))';
+  document.getElementById('invest-proceed').style.display = 'block';
+}
+
+function buildInterrogation(container) {
+  container.innerHTML = `<div class="interrogation-flow" id="interrogation-flow"></div>`;
+  window._interrogOpen = {};
+  renderAllSuspects();
+}
+
+function renderAllSuspects() {
+  const flow = document.getElementById('interrogation-flow');
+  if (!flow) return;
+  flow.innerHTML = '';
+
+  // New order: PinkS → Ali → Slimenem → Alien(unlocked after pressing Ali)
+  const suspects = [
+    {
+      key: 'pinks',
+      name: '🐑 PinkS',
+      img: 'Investigate/PinkSCaracter.png',
+      unlockedAt: 0,
+      questions: [
+        {
+          q: 'Did you see who left the letter?',
+          a: 'Baaaa.'
+        },
+        {
+          q: 'Do you know anything about La Dinde chips?',
+          a: '…Baaaa.'
+        },
+        {
+          q: 'Do you know who has a crush on me?',
+          a: 'Baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.',
+          key: true,
+          unlocks: 'ali'
+        }
+      ]
+    },
+    {
+      key: 'ali',
+      name: '👤 Ali',
+      img: 'Investigate/AliCaracter.png',
+      unlockedAt: 1,
+      questions: [
+        {
+          q: 'Did you write the letter?',
+          a: 'A letter? I don\'t know what you\'re talking about. Go focus on your studies.'
+        },
+        {
+          q: 'Do you know anything about the chips?',
+          a: 'I don\'t eat junk food. Not after cancer at least.'
+        },
+        {
+          q: 'I think you\'re hiding something.',
+          a: 'I\'m not hiding anything, Ferdawss.',
+          unlocks: 'slimenem'
+        }
+      ],
+      pressQuestion: {
+        q: '🔎 Alright Ali, I know you know something. Talk.',
+        a: '…Fine. Alien has been asking me and Slimenem for help writing a letter to some secret crush. That\'s all I know.',
+        key: true,
+        unlocks: 'alien'
+      }
+    },
+    {
+      key: 'slimenem',
+      name: '🎤 Slimenem',
+      img: 'Investigate/SlimenemCaracter.png',
+      unlockedAt: 2,
+      questions: [
+        {
+          q: 'Did you write the letter?',
+          a: 'why was it cool ? did you like the rhymes ? what do you think more swearing or less ?'
+        },
+        {
+          q: 'Do you know who left the chips?',
+          a: 'Turkey chips? nah I don roll with that shi no more, tryna watch ma figure don\'t wanna die in my twennys'
+        },
+        {
+          q: 'Do you know who talks about me?',
+          a: 'Actually yo know that you mention it, Ali asked for ma help to help out some dude tryna make some love poems, told em am a rapper not a loverboy, punkass was corny as shi',
+          key: true
+        }
+      ]
+    },
+    {
+      key: 'alien',
+      name: '👽 Alien',
+      img: 'Investigate/AlienCaracter.png',
+      unlockedAt: 3,
+      questions: [
+        {
+          q: 'Did YOU write the letter?',
+          a: 'A letter ? me ? No I was just... uhh i was playing Minecraft yeah '
+        },
+        {
+          q: 'Are La Dinde chips your favorite?',
+          a: 'Oh yeah i love those chips although a certain someone doesn\'t like me eating unhealthy',
+          key: true
+        },
+        {
+          q: 'Why did you leave the chips specifically?',
+          a: '... I\'m sorry i just wanted to show you that I cared and i was too anxious to say it out loud, so i left the chips and the letter hoping you would understand',
+          key: true,
+          isFinal: true
+        }
+      ]
+    }
+  ];
+
+  window._suspects = suspects;
+
+  suspects.forEach((s, idx) => {
+    const unlocked = idx <= state.interrogationProgress;
+    const div = document.createElement('div');
+    div.className = 'suspect-interrogate ' + (unlocked ? 'unlocked' : 'locked');
+    div.id = 'interrog-' + s.key;
+
+    div.innerHTML = `
+      <div class="suspect-header" onclick="toggleInterrog('${s.key}')">
+        <img src="${s.img}" alt="${s.name}">
+        <div>
+          <div class="sname">${s.name}</div>
+          <div class="sstatus" id="status-${s.key}">${unlocked ? '✅ Available' : '🔒 Locked'}</div>
+        </div>
+      </div>
+      <div class="suspect-dialogue" id="diag-${s.key}"></div>
+    `;
+    flow.appendChild(div);
+  });
+}
+
+function toggleInterrog(key) {
+  const s = window._suspects?.find(x => x.key === key);
+  if (!s) return;
+  const idx = window._suspects.indexOf(s);
+  if (idx > state.interrogationProgress) return;
+
+  playSFX('menu');
+  const diagDiv = document.getElementById('diag-' + key);
+  const isOpen = diagDiv.classList.contains('open');
+  document.querySelectorAll('.suspect-dialogue').forEach(d => d.classList.remove('open'));
+  if (!isOpen) {
+    diagDiv.classList.add('open');
+    renderSuspectQuestions(s, diagDiv);
+  }
+}
+
+function renderSuspectQuestions(s, container) {
+  container.innerHTML = '';
+
+  // track which questions have been asked
+  if (!state.askedQuestions) state.askedQuestions = {};
+  if (!state.askedQuestions[s.key]) state.askedQuestions[s.key] = {};
+
+  const asked = state.askedQuestions[s.key];
+
+  s.questions.forEach((q, qIdx) => {
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '10px';
+
+    if (asked[qIdx]) {
+      // already asked — show Q + A
+      wrap.innerHTML = `
+        <p style="font-family:var(--font-display);font-size:13px;color:var(--amber);margin-bottom:4px">▶ ${q.q}</p>
+        <p class="dialogue-line ${q.key ? 'key' : ''}">${q.a}</p>
+      `;
+    } else {
+      // show as a clickable question button
+      const btn = document.createElement('button');
+      btn.className = 'press-btn';
+      btn.textContent = '❓ ' + q.q;
+      btn.onclick = () => askQuestion(s, qIdx, wrap, btn);
+      wrap.appendChild(btn);
+    }
+    container.appendChild(wrap);
+  });
+
+  // Press button for Ali (only after all 3 normal questions + slimenem done)
+  if (s.key === 'ali') {
+    const allAsked = Object.keys(asked).length >= s.questions.length;
+    const slimenemDone = Object.keys(state.askedQuestions?.slimenem || {}).length >= 3;
+
+    if (allAsked && slimenemDone && !state.aliPressed) {
+      const pressWrap = document.createElement('div');
+      const btn = document.createElement('button');
+      btn.className = 'press-btn';
+      btn.style.borderColor = 'var(--rose-glow)';
+      btn.style.color = 'var(--rose-glow)';
+      btn.textContent = '🔎 ' + s.pressQuestion.q.replace('🔎 ', '');
+      btn.onclick = () => {
+        playSFX('clue');
+        state.aliPressed = true;
+        state.aliPressedText = s.pressQuestion.a;
+        pressWrap.innerHTML = `
+          <p style="font-family:var(--font-display);font-size:13px;color:var(--rose-glow);margin-bottom:4px">▶ ${s.pressQuestion.q}</p>
+          <p class="dialogue-line key">${s.pressQuestion.a}</p>
+        `;
+        // unlock alien
+        if (state.interrogationProgress < 3) {
+          state.interrogationProgress = 3;
+          rebuildInterrogLocks();
+        }
+      };
+      pressWrap.appendChild(btn);
+      container.appendChild(pressWrap);
+    } else if (state.aliPressed) {
+      const pressWrap = document.createElement('div');
+      pressWrap.innerHTML = `
+        <p style="font-family:var(--font-display);font-size:13px;color:var(--rose-glow);margin-bottom:4px">▶ ${s.pressQuestion.q}</p>
+        <p class="dialogue-line key">${s.pressQuestion.a}</p>
+      `;
+      container.appendChild(pressWrap);
+    }
+  }
+}
+
+function askQuestion(s, qIdx, wrap, btn) {
+  playSFX('clue');
+  if (!state.askedQuestions) state.askedQuestions = {};
+  if (!state.askedQuestions[s.key]) state.askedQuestions[s.key] = {};
+  state.askedQuestions[s.key][qIdx] = true;
+
+  const q = s.questions[qIdx];
+
+  // replace button with Q+A
+  wrap.innerHTML = `
+    <p style="font-family:var(--font-display);font-size:13px;color:var(--amber);margin-bottom:4px">▶ ${q.q}</p>
+    <p class="dialogue-line ${q.key ? 'key' : ''}">${q.a}</p>
+  `;
+
+  // check unlocks
+  if (q.unlocks) {
+    const unlockIdx = window._suspects.findIndex(x => x.key === q.unlocks);
+    if (unlockIdx > state.interrogationProgress) {
+      state.interrogationProgress = unlockIdx;
+      rebuildInterrogLocks();
+    }
+  }
+
+  // if this is the final alien question, show the proceed button
+  if (q.isFinal) {
+    document.getElementById('invest-proceed').style.display = 'block';
+    document.getElementById('invest-btn').textContent = 'Confront Alien';
+  }
+
+  // re-render to check if press button should appear for Ali
+  if (s.key === 'ali' || s.key === 'slimenem') {
+    const container = document.getElementById('diag-' + s.key);
+    if (container?.classList.contains('open')) {
+      renderSuspectQuestions(s, container);
+    }
+  }
+}
+
+function rebuildInterrogLocks() {
+  if (!window._suspects) return;
+  window._suspects.forEach((s, idx) => {
+    const div = document.getElementById('interrog-' + s.key);
+    const statusEl = document.getElementById('status-' + s.key);
+    if (!div || !statusEl) return;
+    if (idx <= state.interrogationProgress) {
+      div.classList.remove('locked');
+      div.classList.add('unlocked');
+      statusEl.textContent = '✅ Available';
+    }
+  });
+}
+
+function investProceed() {
+  playSFX('menu');
+  if (state.investPhase === 0) {
+    // go to school narrative + fight teacher
+    state.investPhase = 1;
+    showNarrative([
+      "Ferdawss tucked the letter away carefully.",
+      "There was school to get through first.",
+      "She arrived just in time to run straight into Teacher Machkour.",
+    ], () => startBattle('teacher'));
+  } else if (state.investPhase === 1) {
+    // go to interrogation scene
+    state.investPhase = 2;
+    showNarrative([
+      "With the chips bag as evidence, Ferdawss stepped outside.",
+      "Four suspects. One admirer.",
+      "She started with PinkS — he was always hanging around.",
+    ], () => {
+      buildInvestigateScene();
+      showScene('investigate');
+    });
+  } else if (state.investPhase === 2) {
+    // Final battle vs Alien
+    showNarrative([
+      "The evidence pointed to one person.",
+      "Alien — nervous, passionate, terrible at hiding it.",
+      "Ferdawss found him waiting outside the school gates.",
+      "Time for a final confrontation.",
+    ], () => startBattle('alien'));
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   VICTORY / USB
+════════════════════════════════════════════════════════════ */
+function openUSB() {
+  playSFX('clue');
+  document.getElementById('usb-modal').classList.add('open');
+  // Set your real secret link here:
+  document.getElementById('usb-link').href = '#';
+  document.getElementById('usb-link').textContent = '► SECRET LINK (Coming Soon) ◄';
+}
+
+function closeUSB() {
+  document.getElementById('usb-modal').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════════
+   CONFETTI
+════════════════════════════════════════════════════════════ */
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const pieces = Array.from({length: 180}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height - canvas.height,
+    w: rand(6,14), h: rand(10,18),
+    color: ['#c4566a','#f5ede0','#f0c060','#6aff8a','#e87a90'][Math.floor(Math.random()*5)],
+    vx: rand(-2,2), vy: rand(2,5),
+    rot: Math.random()*360, rspeed: rand(-3,3),
+    life: 1
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.rspeed;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 300) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+
+/* ════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════ */
+function rand(a, b) {
+  return Math.floor(Math.random() * (b - a + 1)) + a;
+}
+
+function shakeSprite(who) {
+  const el = document.getElementById('sprite-' + who);
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 400);
+}
+
+function spawnFloat(text, color, who) {
+  const wrap = document.getElementById('sprite-' + who + '-wrap');
+  const rect = wrap.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = (rect.left + rect.width/2 - 20) + 'px';
+  el.style.top  = (rect.top  + 20) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function showItemPopup(msg) {
+  const el = document.getElementById('item-popup');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  // Unlock audio on first interaction
+  document.body.addEventListener('click', () => {
+    if (!audioCtx) getAudioCtx();
+  }, { once: true });
+});
+</script>
+</body>
+</html>
